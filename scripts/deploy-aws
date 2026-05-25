@@ -1,0 +1,103 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$HostName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$KeyPath,
+
+    [string]$User = "ubuntu",
+    [string]$RemoteDir = "~/maxway",
+    [string]$AllowedHosts = "",
+    [string]$CsrfOrigins = "",
+    [string]$AdminUser = "admin",
+    [string]$AdminEmail = "admin@maxway.local",
+    [string]$AdminPassword = ""
+)
+
+$ErrorActionPreference = "Stop"
+
+if (-not (Test-Path -LiteralPath $KeyPath)) {
+    throw "SSH key not found: $KeyPath"
+}
+
+$root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$archive = Join-Path $env:TEMP "maxway-deploy.tar.gz"
+$remote = "$User@$HostName"
+
+if ([string]::IsNullOrWhiteSpace($AllowedHosts)) {
+    $AllowedHosts = "127.0.0.1,localhost,$HostName"
+}
+
+if ([string]::IsNullOrWhiteSpace($CsrfOrigins)) {
+    $CsrfOrigins = "http://$HostName"
+}
+
+if ([string]::IsNullOrWhiteSpace($AdminPassword)) {
+    $AdminPassword = "Maxway-" + [System.Guid]::NewGuid().ToString("N").Substring(0, 14)
+}
+
+$secretBytes = New-Object byte[] 48
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($secretBytes)
+$secretKey = [Convert]::ToBase64String($secretBytes)
+
+Push-Location $root
+try {
+    if (Test-Path -LiteralPath $archive) {
+        Remove-Item -LiteralPath $archive -Force
+    }
+
+    tar `
+        --exclude=".git" `
+        --exclude=".venv" `
+        --exclude="__pycache__" `
+        --exclude="*.pyc" `
+        --exclude="data/*.sqlite3" `
+        --exclude="django_app/staticfiles" `
+        -czf $archive .
+
+    ssh -i $KeyPath -o StrictHostKeyChecking=accept-new $remote "mkdir -p $RemoteDir"
+    scp -i $KeyPath $archive "${remote}:/tmp/maxway-deploy.tar.gz"
+
+    $remoteScript = @"
+set -e
+mkdir -p $RemoteDir
+tar -xzf /tmp/maxway-deploy.tar.gz -C $RemoteDir
+cd $RemoteDir
+cat > .env <<'ENVEOF'
+DJANGO_SECRET_KEY=$secretKey
+DJANGO_DEBUG=0
+DJANGO_ALLOWED_HOSTS=$AllowedHosts
+DJANGO_CSRF_TRUSTED_ORIGINS=$CsrfOrigins
+DJANGO_DB_PATH=/app/data/maxway_django.sqlite3
+DJANGO_CREATE_DEMO_ADMIN=1
+DJANGO_SUPERUSER_USERNAME=$AdminUser
+DJANGO_SUPERUSER_PASSWORD=$AdminPassword
+DJANGO_SUPERUSER_EMAIL=$AdminEmail
+ENVEOF
+
+if ! command -v docker >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y ca-certificates curl git
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc >/dev/null
+  sudo chmod a+r /etc/apt/keyrings/docker.asc
+  echo "deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \$(. /etc/os-release && echo "\$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+  sudo apt-get update
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+fi
+
+sudo docker compose -f docker-compose.prod.yml up -d --build
+sudo docker compose -f docker-compose.prod.yml ps
+"@
+
+    $remoteScript | ssh -i $KeyPath -o StrictHostKeyChecking=accept-new $remote "bash -s"
+
+    Write-Host ""
+    Write-Host "Maxway deployed: http://$HostName"
+    Write-Host "Django admin: http://$HostName/admin/"
+    Write-Host "Admin user: $AdminUser"
+    Write-Host "Admin password: $AdminPassword"
+}
+finally {
+    Pop-Location
+}
