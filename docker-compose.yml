@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python django_app/manage.py migrate &&
+             python django_app/manage.py seed_maxway &&
+             python django_app/manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: "127.0.0.1,localhost,0.0.0.0"
+      DJANGO_DB_PATH: "/app/data/maxway_django.sqlite3"
+      DJANGO_CREATE_DEMO_ADMIN: "1"
+      DJANGO_SUPERUSER_USERNAME: "admin"
+      DJANGO_SUPERUSER_PASSWORD: "admin12345"
+      DJANGO_SUPERUSER_EMAIL: "admin@maxway.local"
+    volumes:
+      - .:/app
+      - maxway_sqlite:/app/data
+
+volumes:
+  maxway_sqlite:
