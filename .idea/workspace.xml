@@ -1,0 +1,41 @@
+<project version="4">
+<component name="AutoImportSettings">
+<option name="autoReloadType" value="SELECTIVE"/>
+</component>
+<component name="ChangeListManager">
+<list default="true" id="394e6b45-0a54-4eb2-92d0-4e255bfda5b9" name="Changes" comment=""/>
+<option name="SHOW_DIALOG" value="false"/>
+<option name="HIGHLIGHT_CONFLICTS" value="true"/>
+<option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false"/>
+<option name="LAST_RESOLUTION" value="IGNORE"/>
+</component>
+<component name="HighlightingSettingsPerFile">
+<setting file="file://$APPLICATION_HOME_DIR$/plugins/python-ce/helpers/typeshed/stdlib/http/server.pyi" root0="SKIP_INSPECTION"/>
+<setting file="file://$APPLICATION_HOME_DIR$/plugins/python-ce/helpers/typeshed/stdlib/socketserver.pyi" root0="SKIP_INSPECTION"/>
+</component>
+<component name="ProjectColorInfo">{ "associatedIndex": 7 }</component>
+<component name="ProjectId" id="3DfSRgaLZO2qVnugWhqqQYieUGj"/>
+<component name="ProjectViewState">
+<option name="hideEmptyMiddlePackages" value="true"/>
+<option name="showLibraryContents" value="true"/>
+</component>
+<component name="PropertiesComponent">{ "keyToString": { "ModuleVcsDetector.initialDetectionPerformed": "true", "Python.Run Maxway Backend.executor": "Run", "RunOnceActivity.ShowReadmeOnStart": "true", "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true" } }</component>
+<component name="RunManager" selected="Python.Run Maxway Backend"/>
+<component name="SharedIndexes">
+<attachedChunks>
+<set>
+<option value="bundled-python-sdk-02acdf704d18-cbfc7b97e6b2-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.28539.27"/>
+</set>
+</attachedChunks>
+</component>
+<component name="TaskManager">
+<task active="true" id="Default" summary="Default task">
+<changelist id="394e6b45-0a54-4eb2-92d0-4e255bfda5b9" name="Changes" comment=""/>
+<created>1778671626335</created>
+<option name="number" value="Default"/>
+<option name="presentableId" value="Default"/>
+<updated>1778671626335</updated>
+</task>
+<servers/>
+</component>
+</project>
